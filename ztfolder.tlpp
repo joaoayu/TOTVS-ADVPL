@@ -1,0 +1,57 @@
+//Bibliotecas necessárias
+#include 'totvs.ch'
+#include 'protheus.ch'
+
+/*/{Protheus.doc} zTFont
+Conhecendo o TFolder
+@type function
+@version 1.0 
+@author jvsilva
+@since 3/28/2024
+@see https://tdn.totvs.com/display/tec/TFolder%3ANew, https://efacildemais.blogspot.com/2011/06/msadvsize-dimensionamento-de-janelas-no.html, https://tdn.totvs.com/display/tec/TFont%3ANew, https://tdn.totvs.com/display/tec/Construtor+TSay%3ANew, https://tdn.totvs.com/display/tec/Construtor+TButton%3ANew, https://tdn.totvs.com/display/tec/Construtor+TDialog%3ANew
+/*/
+
+User function TFolder()
+Local oDlg1 //Variavel que receberÃ¡ a chamada da classe TDialog
+Local oFolder
+Local aFolder
+
+Local cGet1, cGet2, cGet3
+Local oGet1, oGet2, oGet3
+
+Local oSay1, oSay2, oSay3
+Local oButton1, oButton2, oButton3 //Variavel que armazenarÃ¡ a classe dos botões (Se tornando um objeto)
+/* PARAMETROS DOS BOTÕES
+1º Parametro - Coordenada vertical
+2º Parametro - Coordenada horizontal
+3º Título do botão
+4º Elemento onde ele sera fixado (janela oDlg1)
+5º Ação executada ao clicar no botão */
+
+oDlg1   := TDialog():New(0,0,300,400,'Painel de abas',,,,,CLR_BLACK,CLR_WHITE,,,.T.)//Indica onde a janela vai aparecer na tela / nome da janela
+
+aFolder := {"Aba01","Aba02","Aba03"}
+oFolder := TFolder():New(0,0,aFolder,aFolder,oDlg1,,,, .T.,, 200,200)
+
+//Insere uma TSay em cada aba do folder
+oSay1 := TSay():New(01,01,{||'Nome Aba01'},oFolder:aDialogs[1],,,,,,.T.,CLR_BLUE,CLR_WHITE,300,20)
+oSay2 := TSay():New(01,01,{||'Nome Aba02'},oFolder:aDialogs[2],,,,,,.T.,CLR_BLUE,CLR_WHITE,300,20)
+oSay3 := TSay():New(01,01,{||'Nome Aba03'},oFolder:aDialogs[3],,,,,,.T.,CLR_BLUE,CLR_WHITE,300,20)
+
+//Insere um TGet em cada aba de folder
+cGet1    := Space(30)
+oGet1    := TGet():New(10,01,{|u| IIF(Pcount()>0,cGet1:=u,cGet1)}, oFolder:aDialogs[1],096,009,"",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cGet1,,,,)
+oButton1 := TButton():New(25,10,"Executar ABA1", oFolder:aDialogs[1],{||MSGINFO(cGet1,"Conteudo digitado")}, 60,15,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+cGet2    := Space(30)
+oGet2    := TGet():New(10,01,{|u| IIF(Pcount()>0,cGet2:=u,cGet2)}, oFolder:aDialogs[2],096,009,"",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cGet2,,,,)
+oButton2 := TButton():New(25,10,"Executar ABA2", oFolder:aDialogs[2],{||MSGINFO(cGet2,"Conteudo digitado")}, 60,15,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+cGet3    := Space(30)
+oGet3    := TGet():New(10,01,{|u| IIF(Pcount()>0,cGet3:=u,cGet3)}, oFolder:aDialogs[3],096,009,"",,0,,,.F.,,.T.,,.F.,,.F.,.F.,,.F.,.F.,,cGet3,,,,)
+oButton3 := TButton():New(25,10,"Executar ABA3", oFolder:aDialogs[3],{||MSGINFO(cGet3,"Conteudo digitado")}, 60,15,,,.F.,.T.,.F.,,.F.,,,.F. )
+
+
+oDlg1:Activate(,,,.T.)
+
+return

@@ -1,0 +1,106 @@
+#include 'totvs.ch'
+#include 'protheus.ch'
+
+User Function VincularPreNota()
+    Local lResposta := .F.
+
+    // Mensagem com as opções "Sim" e "Não"
+    lResposta := MsgYesNo("Deseja vincular a pré-nota ao pedido de compras?", "Vinculação de Pré-Nota")
+
+    If lResposta
+        // O usuário clicou em "Sim"
+        MsgInfo("Vinculação será iniciada.", "AVISO")
+        LerArquivo()
+    Else
+        // O usuário clicou em "Não"
+        MsgInfo("Processo cancelado.", "AVISO")
+    EndIf
+Return
+
+Static Function LerArquivo()
+    Local aArea      := FWGetArea()
+    Local cArquivo   := ""
+    Local cLinha     := ""
+    Local cPedidoCompra := ""
+    Local cPreNota   := ""
+    Local cDelim     := ";"
+    Local nPos       := 0
+    Local oFile
+
+    // Abre a janela para selecionar o arquivo CSV
+    cArquivo := tFileDialog( "All files (*.*) | All Text files (*.txt) ", "Selecao de Arquivos", , , .F., GETF_MULTISELECT )
+    
+    // Se o arquivo existir
+    If !Empty(cArquivo) .And. File(cArquivo)
+        
+        // Definindo o arquivo a ser lido
+        oFile := FWFileReader():New(cArquivo)
+        
+        // Se o arquivo pode ser aberto
+        If (oFile:Open())
+            
+            // Enquanto houver linhas a serem lidas
+            While (oFile:HasLine())
+                
+                // Buscando o texto da linha atual
+                cLinha := oFile:GetLine()
+
+                // Extrai o número do pedido de compra e o número da pré-nota
+                nPos := At(cDelim, cLinha)
+                If nPos > 0
+                    cPedidoCompra := SubStr(cLinha, 1, nPos - 1)
+                    cPreNota := SubStr(cLinha, nPos + 1)
+                EndIf
+
+                // Verifica se os valores foram extraídos
+                If !Empty(cPedidoCompra) .And. !Empty(cPreNota)
+                    // Inicia o processo de vinculação
+                    ProcessarVinculo(cPedidoCompra, cPreNota)
+                Else
+                    MsgAlert("Linha inválida no arquivo: " + cLinha, "Atenção")
+                EndIf
+            EndDo
+
+            // Fecha o arquivo
+            oFile:Close()
+        Else
+            MsgAlert("Não foi possível abrir o arquivo CSV.", "Erro")
+        EndIf
+    Else
+        MsgAlert("Arquivo não encontrado!", "Erro")
+    EndIf
+    
+    FWRestArea(aArea)
+Return
+
+Static Function ProcessarVinculo(cPedidoCompra, cPreNota)
+    Local aArea := FWGetArea()
+
+    // Seleciona a tabela do pedido de compra (exemplo: SC1)
+    DbSelectArea("SC7")
+    DbSetOrder(1)  // Define a ordem de busca pelo índice do pedido de compra
+
+    // Tenta localizar o pedido de compra
+    If SC1->(DbSeek(cPedidoCompra))
+        // Bloqueia o registro para edição
+        If RecLock("SC7", .F.)
+            // Atualiza o campo da pré-nota
+            SC1->C1_PRENOTA := cPreNota
+            // Confirma a alteração
+            If DbCommit()
+                MsgInfo("Pedido de compras " + cPedidoCompra + " vinculado à pré-nota " + cPreNota + " com sucesso!", "Sucesso")
+            Else
+                MsgStop("Erro ao salvar o vínculo.", "Erro")
+            EndIf
+
+            // Desbloqueia o registro
+            DbUnlock()
+        Else
+            MsgStop("Não foi possível bloquear o pedido de compras.", "Erro")
+        EndIf
+    Else
+        MsgAlert("Pedido de compras não encontrado: " + cPedidoCompra, "Atenção")
+    EndIf
+
+    FWRestArea(aArea)
+Return

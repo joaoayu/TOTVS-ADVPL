@@ -1,0 +1,102 @@
+// Bibliotecas
+#include 'totvs.ch'
+#include 'protheus.ch'
+
+User Function Processamento()
+    Local lResposta := .F.
+
+    // Mensagem com as opções "Sim" e "Não"
+    lResposta := MsgYesNo("Deseja iniciar o processamento?", "Processamento")
+
+    If lResposta
+        // O usuário clicou em "Sim"
+        MsgInfo("Processamento será iniciado.", "AVISO")
+        ler()
+    Else
+        // O usuário clicou em "Não"
+        MsgInfo("Processamento nao executado", "AVISO")
+    EndIf
+Return
+
+Static Function Ler(cFile)
+    Local aArea      := FWGetArea()
+    Local cArquivo   := ""
+    Local cLinha     := ""
+    Local cCodForn   := ""
+    Local nFaseA     := 0
+    Local nFaseB     := 0
+    Local cDelim     := ";"
+    Local nPos       := 0
+
+    // Abre a janela para selecionar o arquivo CSV
+    cArquivo := tFileDialog( "All files (*.*) | All Text files (*.txt) ", "Selecao de Arquivos", , , .F., GETF_MULTISELECT )
+    
+    // Se o arquivo existir
+    If !Empty(cArquivo) .And. File(cArquivo)
+        
+        // Definindo o arquivo a ser lido
+        oFile := FWFileReader():New(cArquivo)
+        
+        // Se o arquivo pode ser aberto
+        If (oFile:Open())
+            
+            // Enquanto houver linhas a serem lidas
+            While (oFile:HasLine())
+                
+                // Buscando o texto da linha atual
+                cLinha := oFile:GetLine()
+                
+                // Inicializa as variáveis
+                cCodForn := ""
+                nFaseA := 0
+                nFaseB := 0
+
+                // Extrai o código do fornecedor
+                nPos := At(cDelim, cLinha)
+                If nPos > 0
+                    cCodForn := SubStr(cLinha, 1, nPos - 1)
+                    cLinha := SubStr(cLinha, nPos + 1)
+                EndIf
+                
+                // Extrai o valor da fase A
+                nPos := At(cDelim, cLinha)
+                If nPos > 0
+                    nFaseA := Val(SubStr(cLinha, 1, nPos - 1))
+                    cLinha := SubStr(cLinha, nPos + 1)
+                EndIf
+                
+                // Extrai o valor da fase B
+                nFaseB := Val(cLinha)
+
+                // Localiza o fornecedor na SA2
+                DbSelectArea("SA2")
+                DbSetOrder(1) // A ordem 1 é o índice pelo código do fornecedor
+                
+                // Tenta localizar o fornecedor
+                If !(SA2->(DbSeek(FWxFilial('SA2') + cCodForn)))
+                    MsgAlert("Fornecedor não encontrado: " + cCodForn, "Atenção")
+                Else
+                    // Bloqueia o registro para edição
+                    RecLock('SA2', .F.) 
+                    
+                    // Atualiza os valores
+                    SA2->A2_CAMPOA := nFaseA
+                    SA2->A2_CAMPOB := nFaseB
+                    
+                    // Desbloqueia o registro
+                    SA2->(MSUnlock()) 
+                    MsgAlert("Processamento do fornecedor " + cCodForn + " concluido com sucesso!", "Atenção")
+                EndIf
+            EndDo
+
+            // Fecha o arquivo
+            oFile:Close()
+        Else
+            MsgAlert("Não foi possível abrir o arquivo CSV.", "Erro")
+        EndIf
+    Else
+        MsgAlert("Arquivo não encontrado!", "Erro")
+    EndIf
+    
+    FWRestArea(aArea)
+Return

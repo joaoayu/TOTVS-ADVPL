@@ -1,0 +1,52 @@
+#include 'totvs.ch'
+#include 'protheus.ch'
+
+/*/{Protheus.doc} zTFont
+Fonte criado com o intuito de aprender a fazer os componentes visuais do protheus.
+@type function
+@version 1.0 
+@author jvsilva
+@since 3/28/2024
+@see https://efacildemais.blogspot.com/2011/06/msadvsize-dimensionamento-de-janelas-no.html, https://tdn.totvs.com/display/tec/TFont%3ANew, https://tdn.totvs.com/display/tec/Construtor+TSay%3ANew, https://tdn.totvs.com/display/tec/Construtor+TButton%3ANew, https://tdn.totvs.com/display/tec/Construtor+TDialog%3ANew
+/*/
+
+User function zMsAdvSize()
+Local oDlg1 //Variavel que receberÃ¡ a chamada da classe TDialog
+Local cTituloJanela := "ACESSOS RÃ?PIDOS" //Variavel para mostrar o titulo da janela do TDialog.
+Local oButton1 //Variavel que armazenarÃ¡ a classe do primeiro botÃ£o (Se tornando um objeto)
+Local oButton2 //Variavel que armazenarÃ¡ a classe do segundo botÃ£o
+Local oButton3 // Variavel que armazenarÃ¡ a classe do terceiro botÃ£o 
+Local oButton4 //Variavel que armazenarÃ¡ a classe do quarto botÃ£o
+Local oButton5 //Variavel que armazenarÃ¡ a classe do quinto botÃ£o
+Local oSay1, oSay2
+Local oFont1 //Fonte Comic Sans
+Local oFont2 //Fonte para os botoes
+Local aSize := MsAdvSize() //funÃ§Ã£o interna que retorna um array com as coordenadas/dimensÃµes de tela
+
+oDlg1 := TDialog():New(aSize[7],aSize[1],aSize[6],aSize[5],cTituloJanela,,,,,CLR_BLACK, CLR_WHITE,,,.T.) //Indica onde a janela vai aparecer na tela / nome da janela
+
+oFont1 := TFont():New('Arial',,16,,.T.,,,,,.F.,.F.) //Variavel que altera o texto para a fonte 'Arial', tamanho 16
+oFont2 := TFont():New('Arial Black',,12,,.F.,,,,,.F.,.F.) //Variavel que altera o texto para a fonte 'Arial Black', tamanho 12
+
+/* PARAMETROS DOS BOTÕES
+1º Parametro - Coordenada vertical
+2º Parametro - Coordenada horizontal
+3º Título do botão
+4º Elemento onde ele sera fixado (janela oDlg1)
+5º Ação executada ao clicar no botão */
+oButton1 := TButton():New(30, 40, "Clientes",oDlg1,{|| Mata030()}, 40,15,,oFont2,.F.,.T.,.F.,,.F.,,,.F.) //Chama tela de clientes
+oSay1 := TSay():New(15,70,{||'Clique no botÃ£o para acessar a opÃ§Ã£o desejada.'},oDlg1,,,,,,.T.,CLR_BLACK, CLR_WHITE,200,20) //Indica onde a janela vai aparecer na tela / nome da janela
+
+oButton2 := TButton():New(30, 85, "Fornecedores",oDlg1,{||Mata020()}, 40,15,,oFont2,.F.,.T.,.F.,,.F.,,,.F.) //Chama tela de fornecedores
+
+oButton3 := TButton():New(30,130, "Bancos", oDlg1,{|| Mata070()}, 40,15,,oFont2,.F.,.T.,.F.,,.F.,,,.F.) //Chama a tela dos bancos
+
+oButton4 := TButton():New(30,175,"Produtos", oDlg1,{|| Mata010()}, 40,15,,oFont2,.F.,.T.,.F.,,.F.,,,.F.) //Chama a tela de produtos
+
+oButton5 := TButton():New(150,85,"Fechar janela", oDlg1,{|| oDlg1:end()}, 80,20,,oFont2,.F.,.T.,.F.,,.F.,,,.F.) //Fecha a tela
+oSay2 := TSay():New(140,70,{||'Clique no botÃ£o abaixo para sair do programa.'},oDlg1,,,,,,.T.,CLR_BLACK, CLR_WHITE,200,20) //Indica onde a janela vai aparecer na tela / nome da janela
+
+
+oDlg1:Activate(,,,) //Ã‰ o metodo que vai chamar a classe e ativar a janela
+
+return

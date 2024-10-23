@@ -1,0 +1,110 @@
+#INCLUDE "Protheus.ch"
+#INCLUDE "FWMVCDEF.CH"
+ 
+/*{Protheus.doc} CNTA121()
+   Possibilitar ao desenvolvedor realizar a mesma operação anteriormente feita no ponto de entrada CN130BUT
+*/
+User Function CNTA121()
+     Local aParam := PARAMIXB
+     Local xRet := .T.
+     Local oModel := ''
+     Local cIdPonto := ''
+     Local cIdModel := ''
+  
+     If aParam <> NIL
+         oModel  := aParam[1]
+         cIdPonto:= aParam[2]
+         cIdModel:= aParam[3]
+          
+         If(cIdPonto == 'BUTTONBAR')
+            xRet := { {'Importar itens', 'BUDGET', { |x| U_Exemplo(x) }, 'Botão customizado' } } //Uma opção nova será adicionada ao menu Outras Ações
+         EndIf
+     EndIf
+ Return xRet
+ 
+User Function Exemplo(oView)
+ 
+Local lResposta := .F.
+    // Mensagem com as opções "Sim" e "Não"
+    lResposta := MsgYesNo("Deseja importar o arquivo .CSV?", "IMPORTAÇÃO")
+    If lResposta
+        // O usuário clicou em "Sim"
+        MsgInfo("Processamento será iniciado.", "AVISO")
+        ler()
+    Else
+        // O usuário clicou em "Não"
+    EndIf
+Return
+Static Function Ler(cFile)
+    Local cArquivo   := ""
+    Local oModel    := Nil
+    Local cCodCTR   := ""
+    Local cNumMed   := ""
+    Local aMsgDeErro:= {}
+    Local lRet      := .F. 
+    // Abre a janela para selecionar o arquivo CSV
+    cArquivo := tFileDialog( "All files (*.*) | All Text files (*.txt) ", "Selecao de Arquivos", , , .F., GETF_MULTISELECT )
+        // Se o arquivo existir
+    If !Empty(cArquivo) .And. File(cArquivo)
+        
+        // Definindo o arquivo a ser lido
+        oFile := FWFileReader():New(cArquivo)
+        
+        // Se o arquivo pode ser aberto
+        If (oFile:Open())
+            
+            // Enquanto houver linhas a serem lidas
+            While (oFile:HasLine())
+                
+                // Buscando o texto da linha atual
+                cLinha := oFile:GetLine()
+                
+                // Inicializa as variáveis
+                cCodForn := ""
+                nFaseA := 0
+                nFaseB := 0
+
+                // Extrai o código do fornecedor
+                nPos := At(cDelim, cLinha)
+                If nPos > 0
+                    cCodForn := SubStr(cLinha, 1, nPos - 1)
+                    cLinha := SubStr(cLinha, nPos + 1)
+                EndIf
+                
+                // Extrai o valor da fase A
+                nPos := At(cDelim, cLinha)
+                If nPos > 0
+                    nFaseA := Val(SubStr(cLinha, 1, nPos - 1))
+                    cLinha := SubStr(cLinha, nPos + 1)
+                EndIf
+                
+                // Extrai o valor da fase B
+                nFaseB := Val(cLinha)
+    CN9->(DbSetOrder(1))
+    If CN9->(DbSeek(xFilial("CN9") + cCodCTR))//Posicionar na CN9 para realizar a inclusão
+        oModel := FWLoadModel("CNTA121")
+        oModel:SetOperation(MODEL_OPERATION_INSERT)
+        If(oModel:CanActivate())           
+            oModel:Activate()
+            oModel:SetValue("CNDMASTER","CND_CONTRA"    ,CN9->CN9_NUMERO)
+            oModel:SetValue("CNDMASTER","CND_RCCOMP"    ,"1")//Selecionar competência
+             
+            oModel:SetValue("CXNDETAIL","CXN_CHECK" , .T.)//Marcar a planilha(nesse caso apenas uma)           
+            oModel:GetModel('CNEDETAIL'):GoLine(1)
+            oModel:SetValue( 'CNEDETAIL' , 'CNE_QUANT'  , 1)           
+             
+            If (oModel:VldData()) /*Valida o modelo como um todo*/
+                oModel:CommitData()
+            EndIf
+        EndIf
+         
+        If(oModel:HasErrorMessage())
+            aMsgDeErro := oModel:GetErrorMessage()
+        Else
+            cNumMed := CND->CND_NUMMED          
+            oModel:DeActivate()        
+            lRet := CN121Encerr(.T.) //Realiza o encerramento da medição                   
+        EndIf
+    EndIf  
+Return lRet
+Return
